@@ -1,4 +1,4 @@
-use crate::{BP_MODS, CONFIG_DIR, EXE_DIR, GAME_ROOT, UE4SS_MODS};
+use crate::{BP_MODS, EXE_DIR, LOCAL_DIR, GAME_ROOT};
 use once_cell::unsync::Lazy;
 use std::env;
 use std::fmt::{Debug, Formatter};
@@ -68,34 +68,17 @@ pub fn logical_splice(base: &Path, relative: &Path, onto: &Path) -> Option<PathB
 }
 
 /// Re-root the origin path onto the virtualized path, if applicable.
-/// If the origin path will ONLY BE re-rooted if is a member of the following dirs:
-/// - GAME/Binaries/Win64/Mods/
-/// - GAME/Content/Paks/LogicMods/
+/// The origin path will ONLY BE re-rooted if is a member of the following dirs:
+/// - LOCAL_DIR
 pub fn reroot_path(origin: &NormalizedPath) -> Option<PathBuf> {
     let origin = &origin.0;
     
-    let lua_mods: Lazy<PathBuf> = Lazy::new(|| EXE_DIR.join("Mods").to_path_buf());
     let bp_mods: Lazy<PathBuf> = Lazy::new(|| {
-        path_clean::clean(EXE_DIR
-            .join("..")
-            .join("..")
-            .join("Content")
-            .join("Paks")
-            .join("LogicMods")
-            .to_path_buf())
+        path_clean::clean(LOCAL_DIR
+            .join(""))
     });
-    let config_dir: Lazy<PathBuf> = Lazy::new(|| {
-        path_clean::clean(EXE_DIR
-            .join("..")
-            .join("..")
-            .join("Config"))
-            .to_path_buf()
-    });
-
     let bindings = vec![
-        (lua_mods.as_ref(), UE4SS_MODS.get().unwrap()),
-        (bp_mods.as_ref(), BP_MODS.get().unwrap()),
-        (config_dir.as_ref(), CONFIG_DIR.get().unwrap()),
+        (bp_mods.as_ref(), BP_MODS.get().unwrap())
     ];
 
     for (relative_to, onto) in bindings {
